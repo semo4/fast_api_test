@@ -1,8 +1,8 @@
-"""create address table
+"""create table address
 
-Revision ID: 10a768b05d2b
-Revises: 1290d879f801
-Create Date: 2021-07-04 17:47:45.141991
+Revision ID: b0ec5f5529c7
+Revises: 78884d515434
+Create Date: 2021-07-05 16:33:47.255608
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '10a768b05d2b'
-down_revision = '1290d879f801'
+revision = 'b0ec5f5529c7'
+down_revision = '78884d515434'
 branch_labels = None
 depends_on = None
 

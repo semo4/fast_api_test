@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import (Column, DateTime, ForeignKey, ForeignKeyConstraint,
+from sqlalchemy import (Column, DateTime, ForeignKey,
                         Integer, MetaData, String, Table, create_engine, func,
                         text)
 from sqlalchemy.dialects.postgresql import UUID
@@ -30,9 +30,9 @@ users = Table(
            **default_now),
     Column('address_id',
            UUID(as_uuid=True),
-           ForeignKey('address.id'),
-           nullable=False),
-    ForeignKeyConstraint(['id'], ['address.id'], name='FK_ADDRESS_USER'))
+           ForeignKey('address.id',name='FK_ADDRESS_USERS'),
+           nullable=False)
+    )
 
 address = Table(
     'address', metadata,

@@ -92,7 +92,7 @@ async def update_single_value_user(user_id: UUID, user: User):
 async def delete_single_user(user_id):
     try:
         result = delete(users).where(users.c.id == user_id).returning(users.c.id).execute()
-        return {'message': 'User Deleted Successfully'}, 200
+        return {'message': 'User Deleted Successfully'}, 200, result.first()
     except IntegrityError as e:
         print(e)
         return {'message': 'The Id Dose not Exist'}, 400
