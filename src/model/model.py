@@ -17,37 +17,37 @@ class Address(BaseModel):
     # street_name: Optional[str] = Query(None, min_length=10, max_length=50)
 
     @validator('name')
-    def check_name(cls, value):
-        if not re.findall('[A-Za-z]{5,50}', value):
+    def check_name(cls, name):
+        if not re.findall('[A-Za-z]{5,50}', name):
             raise ValueError(
                 'Name must contain letter and it\'s length between 10 to 50 letters'
             )
-        return value
+        return name
 
     @validator('zip_code')
-    def check_zip_code(cls, value):
-        if len(value) != 5:
+    def check_zip_code(cls, zip_code):
+        if len(zip_code) != 5:
             raise ValueError('Zip Code must be number and it\'s length is 5')
-        elif not re.findall('[0-9]{5}', value):
+        elif not re.findall('[0-9]{5}', zip_code):
             raise ValueError('Zip Code must be number and it\'s length is 5')
-        return value
+        return zip_code
 
     @validator('street_name')
-    def check_street_name(cls, value):
-        if not re.findall('[A-Za-z]{10,50}', value):
+    def check_street_name(cls, street_name):
+        if not re.findall('[A-Za-z]{10,50}', street_name):
             raise ValueError(
                 'Street name must contain letters and it\'s length between 10 to 50'
             )
-        return value
+        return street_name
 
     @validator('building_number')
-    def check_building_number(cls, value):
-        if not re.findall('[0-9]{0,4}', value):
+    def check_building_number(cls, building_number):
+        if not re.findall('[0-9]{0,4}', building_number):
             raise ValueError('Building number must contain numbers')
-        elif not 0 < int(value) < 1000:
+        elif not 0 < int(building_number) < 1000:
             raise ValueError(
                 'Bulding number must be garter from 0 and less than 1000')
-        return int(value)
+        return int(building_number)
 
 
 class AddressRespons(BaseModel):
@@ -67,28 +67,28 @@ class User(BaseModel):
     address_id: UUID
 
     @validator('first_name')
-    def check_first_name(cls, value):
-        if not re.findall('[A-Za-z]{10,50}', value):
+    def check_first_name(cls, first_name):
+        if not re.findall('[A-Za-z]{10,50}', first_name):
             raise ValidationError(
                 'First Name must contain letter and it\'s length between 10 to 50 letters'
             )
-        return value
+        return first_name
 
     @validator('last_name')
-    def check_last_name(cls, value):
-        if not re.findall('[A-Za-z]{10,50}', value):
+    def check_last_name(cls, last_name):
+        if not re.findall('[A-Za-z]{10,50}', last_name):
             raise ValidationError(
                 'Last Name must contain letter and it\'s length between 10 to 50 letters'
             )
-        return value
+        return last_name
 
     @validator('email')
-    def check_email(cls, value):
+    def check_email(cls, email):
         if not re.findall('[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}',
-                          value):
+                          email):
             raise ValidationError(
                 'email must be like this format (example@example.com)')
-        return value
+        return email
 
 
 class UserResponse(BaseModel):
