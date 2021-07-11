@@ -1,13 +1,15 @@
 from datetime import datetime
 
+from decouple import config
 from sqlalchemy import (
-    Column, DateTime, ForeignKey, Integer, MetaData, String, Table, create_engine, func, text
+    Column, DateTime, ForeignKey, Integer, MetaData, String, Table, UniqueConstraint, create_engine,
+    func, text
 )
 from sqlalchemy.dialects.postgresql import UUID
 
-DB_URL = 'postgresql://osama:yousef123@localhost:5432/user_address'
+DB_URL = config('DB_URL')
 
-engine = create_engine(DB_URL, echo=True)
+engine = create_engine(DB_URL)
 metadata = MetaData(bind=engine)
 
 new_uuid = text('uuid_generate_v4()')
@@ -30,8 +32,12 @@ users = Table(
            **default_now),
     Column('address_id',
            UUID(as_uuid=True),
-           ForeignKey('address.id', name='FK_ADDRESS_USERS'),
-           nullable=False))
+           ForeignKey('address.id', name='fk_address_user'),
+           nullable=False),
+    UniqueConstraint('first_name',
+                     'last_name',
+                     'email',
+                     name='unique_user_values'))
 
 address = Table(
     'address', metadata,
@@ -45,4 +51,7 @@ address = Table(
     Column('street_name', String, nullable=False),
     Column('created_at', DateTime, nullable=False, **default_now),
     Column('updated_at', DateTime, nullable=False, onupdate=now,
-           **default_now))
+           **default_now),
+    UniqueConstraint('zip_code',
+                     'building_number',
+                     name='unique_address_values'))

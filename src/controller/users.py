@@ -1,17 +1,25 @@
 from uuid import UUID
-from database import address, users
+
 from fastapi import APIRouter, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from src.model.model import User, UserResponse
-from sqlalchemy.sql import select
+from sqlalchemy import select
+from sqlalchemy.sql.elements import literal_column
 
-router = APIRouter()
+from src.database import address, users
+from src.model import User, UserResponse
+
+router = APIRouter(prefix='/users', tags=['Users'])
 
 
-@router.get('/users/', tags=['Users'], response_model=UserResponse)
-async def read_users():
-    result = select(users, address).select_from(
+def user_by_id(user_id: UUID):
+    result = users.select().where(users.c.id == user_id).execute().first()
+    return result
+
+
+@router.get('/', response_model=UserResponse)
+async def get_users():
+    result = select([users, address]).select_from(
         users.join(address, users.c.address_id == address.c.id)).where(
             users.c.address_id == address.c.id).execute().fetchall()
     if not result:
@@ -22,11 +30,11 @@ async def read_users():
                             UserResponse(**dict(i)) for i in result))
 
 
-@router.get('/users/{user_id}', tags=['Users'], response_model=UserResponse)
-async def read_single_user(user_id):
+@router.get('/{user_id}', response_model=UserResponse)
+async def get_user_by_id(user_id: UUID):
     result = select(users, address).select_from(
         users.join(address, users.c.address_id == address.c.id)).where(
-            users.c.id == user_id).execute().fetchone()
+            users.c.id == user_id).execute().first()
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='User does not Exist')
@@ -34,11 +42,10 @@ async def read_single_user(user_id):
                         content=jsonable_encoder(UserResponse(**dict(result))))
 
 
-@router.post('/users/', tags=['Users'], response_model=UserResponse)
+@router.post('/', response_model=UserResponse)
 async def add_new_users(user: User):
     result = users.insert().values(dict(user)).returning(
-        users.c.first_name, users.c.last_name,
-        users.c.email).execute().first()
+        literal_column('*')).execute().first()
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='No User Addedd')
@@ -46,53 +53,56 @@ async def add_new_users(user: User):
                         content=jsonable_encoder(UserResponse(**dict(result))))
 
 
-@router.put('/users/{user_id}', tags=['Users'], response_model=UserResponse)
-async def update_single_user(user_id: UUID, user: User):
-    result = users.update().where(users.c.id == user_id).values(
-        dict(user)).returning(users.c.id, users.c.first_name,
-                              users.c.last_name,
-                              users.c.email).execute().first()
-    if not result:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='User Update Failed')
-    return JSONResponse(status_code=status.HTTP_200_OK,
-                        content=jsonable_encoder(UserResponse(**dict(result))))
-
-
-@router.patch('/users/{user_id}', tags=['Users'])
-async def update_single_value_user(user_id: UUID, user: User):
-    result = users.update().where(users.c.id == user_id).values(
-        dict(user)).returning(users.c.first_name, users.c.last_name,
-                              users.c.email).execute().first()
-
-    if not result:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='User Update Failed')
-    return JSONResponse(status_code=status.HTTP_200_OK,
-                        content=jsonable_encoder(UserResponse(**dict(result))))
-
-
-@router.delete('/users/{user_id}', tags=['Users'])
-async def delete_single_user(user_id):
-    result = users.delete().where(users.c.id == user_id).returning(
-        users.c.id, users.c.first_name, users.c.last_name,
-        users.c.email).execute().first()
+@router.delete('/{user_id}', response_model=UserResponse)
+async def delete_user_by_id(user_id: UUID):
+    result = user_by_id(user_id)
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='User Dose not Found')
-    return JSONResponse(status_code=status.HTTP_200_OK,
-                        content=jsonable_encoder(
-                            [UserResponse(**dict(result))]))
+    else:
+        result = users.delete().where(users.c.id == user_id).returning(
+            literal_column('*')).execute().first()
+        if not result:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail='User Dose not deleted')
+        return JSONResponse(status_code=status.HTTP_200_OK,
+                            content=jsonable_encoder(
+                                [UserResponse(**dict(result))]))
 
 
-@router.get('/users/address/{address_id}', tags=['Users'])
-async def read_single_user_by_address(address_id):
-    result = select(users, address).select_from(
-        users.join(address, users.c.address_id == address.c.id)).where(
-            users.c.address_id == address_id).execute().fetchone()
+@router.put('/{user_id}', response_model=UserResponse)
+async def update_single_user(user_id: UUID, user: User):
+    result = user_by_id(user_id)
     if not result:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='No User Found')
-    return JSONResponse(status_code=status.HTTP_200_OK,
-                        content=jsonable_encoder(
-                            [UserResponse(**dict(result))]))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User Not Found With this {}'.format(user_id))
+    else:
+        result = users.update().where(users.c.id == user_id).values(
+            dict(user)).returning(literal_column('*')).execute().first()
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='User Not Update with values {}'.format(user))
+        return JSONResponse(status_code=status.HTTP_200_OK,
+                            content=jsonable_encoder(
+                                UserResponse(**dict(result))))
+
+
+@router.patch('/{user_id}', response_model=UserResponse)
+async def update_single_value_user(user_id: UUID, user: User):
+    result = user_by_id(user_id)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User Not Found With this {}'.format(user_id))
+    else:
+        result = users.update().where(users.c.id == user_id).values(
+            dict(user.dict(exclude_unset=True))).returning(literal_column('*')).execute().first()
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='User Not Update with values {}'.format(user))
+        return JSONResponse(status_code=status.HTTP_200_OK,
+                            content=jsonable_encoder(
+                                UserResponse(**dict(result))))

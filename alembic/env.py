@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from database import metadata, DB_URL 
+from src.database import metadata, DB_URL 
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
