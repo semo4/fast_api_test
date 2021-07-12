@@ -27,6 +27,7 @@ users = Table(
     Column('first_name', String, nullable=False),
     Column('last_name', String, nullable=False),
     Column('email', String, nullable=False),
+    Column('password', String, nullable=False),
     Column('created_at', DateTime, nullable=False, **default_now),
     Column('updated_at', DateTime, nullable=False, onupdate=now,
            **default_now),

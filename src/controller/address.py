@@ -2,11 +2,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.encoders import jsonable_encoder
+from fastapi.param_functions import Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.sql.elements import literal_column
 
 from src.database import address
-from src.model import Address, AddressRespons
+from src.model import Address, AddressRespons, User
+from src.oauth2 import get_current_user
 
 router = APIRouter(prefix='/address', tags=['Address'])
 
@@ -18,7 +20,8 @@ def address_by_id(address_id: UUID):
 
 
 @router.get('/', response_model=AddressRespons)
-async def get_addresses():
+async def get_addresses(current_user: User = Depends(
+                        get_current_user)) -> JSONResponse:
     result = address.select().execute().fetchall()
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -29,7 +32,9 @@ async def get_addresses():
 
 
 @router.get('/{address_id}', response_model=AddressRespons)
-async def get_address_by_id(address_id: UUID):
+async def get_address_by_id(
+    address_id: UUID, current_user: User = Depends(get_current_user)
+) -> JSONResponse:
     result = address.select().where(
         address.c.id == address_id).execute().first()
     if not result:
@@ -42,7 +47,8 @@ async def get_address_by_id(address_id: UUID):
 
 
 @router.post('/', response_model=AddressRespons)
-async def add_new_address(add: Address):
+async def add_new_address(add: Address,
+                          current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address.insert().values(dict(add)).returning(
         literal_column('*')).execute().first()
     if not result:
@@ -54,7 +60,9 @@ async def add_new_address(add: Address):
 
 
 @router.delete('/{address_id}', response_model=AddressRespons)
-async def delete(address_id: UUID):
+async def delete(
+    address_id: UUID, current_user: User = Depends(get_current_user)
+) -> JSONResponse:
     result = address_by_id(address_id)
     if not result:
         raise HTTPException(
@@ -66,13 +74,14 @@ async def delete(address_id: UUID):
         if not result:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail='Address Not Deleted')
-        return JSONResponse(status_code=status.HTTP_200_OK,
+        return JSONResponse(status_code=status.HTTP_204_NO_CONTENT,
                             content=jsonable_encoder(
                                 AddressRespons(**dict(result))))
 
 
 @router.put('/{address_id}', response_model=AddressRespons)
-async def update(address_id: UUID, add: Address):
+async def update(address_id: UUID, add: Address,
+                 current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address_by_id(address_id)
     if not result:
         raise HTTPException(
@@ -84,13 +93,14 @@ async def update(address_id: UUID, add: Address):
         if not result:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail='Address Dose Not Updated')
-        return JSONResponse(status_code=status.HTTP_200_OK,
+        return JSONResponse(status_code=status.HTTP_201_CREATED,
                             content=jsonable_encoder(
                                 AddressRespons(**dict(result))))
 
 
 @router.patch('/{address_id}', response_model=AddressRespons)
-async def update_single_value_address(address_id: UUID, add: Address):
+async def update_single_value(address_id: UUID, add: Address,
+                              current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address_by_id(address_id)
     if not result:
         raise HTTPException(
@@ -98,10 +108,11 @@ async def update_single_value_address(address_id: UUID, add: Address):
             detail='Address With this ID {} Not Found'.format(address_id))
     else:
         result = address.update().where(address.c.id == address_id).values(
-            dict(add.dict(exclude_unset=True))).returning(literal_column('*')).execute().first()
+            dict(add.dict(exclude_unset=True))).returning(
+                literal_column('*')).execute().first()
         if not result:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail='Address Dose Not Updated')
-        return JSONResponse(status_code=status.HTTP_200_OK,
+        return JSONResponse(status_code=status.HTTP_201_CREATED,
                             content=jsonable_encoder(
                                 AddressRespons(**dict(result))))

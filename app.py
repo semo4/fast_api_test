@@ -4,9 +4,10 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
-from src.controller import address, users
+from src.controller import address, authantication, users
 
 app = FastAPI(version="1.0", description='User Address Api')
+app.include_router(authantication.router)
 app.include_router(users.router)
 app.include_router(address.router)
 
@@ -25,8 +26,14 @@ async def value_exception_handler(request, exc):
 
 @app.exception_handler(HTTPException)
 async def https_exception_handler(request, exc):
-    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND,
                         content=jsonable_encoder({'message': 'Not Exist'}))
+
+
+@app.exception_handler(HTTPException)
+async def unauthorized_exception_handler(request, exc):
+    return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED,
+                        content=jsonable_encoder({'message': 'Not UNAUTHORIZED'}))
 
 
 @app.exception_handler(IntegrityError)

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -12,30 +13,64 @@ class Address(BaseModel):
 
 
 class AddressRespons(BaseModel):
+    id: UUID
     name: str
     zip_code: str
-    building_number: Optional[int] = 0
-    street_name: Optional[str] = None
+    building_number: Optional[int]
+    street_name: Optional[str]
+    created_at: datetime = None
+    updated_at: datetime = None
 
     class Config:
         orm_mode = True
 
 
 class User(BaseModel):
-    first_name: str = Field(regex=r'[A-Za-z]{5,50}')
-    last_name: str = Field(regex=r'[A-Za-z]{5,50}')
-    email: str = Field(regex=r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}')
+    first_name: str = Field(regex=r'[A-Za-z]{5,50}',
+                            description='Last Name must be all character at least with length of 5')
+    last_name: str = Field(
+        regex=r'[A-Za-z]{5,50}',
+        description='Last Name must be all character at least with length of 5'
+    )
+    email: str = Field(
+        regex=r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}',
+        validate_email=True,
+        description='Email must by like exmple@example.com')
     address_id: UUID
+    password: str = Field(
+        regex=r'[A-Za-z0-9]{8,}$',
+        description='the password should contain Letters(Lower and Upper),'
+        + 'special characters and numbers at least with length 8'
+    )
+    # @validate_email('email')
+    # def check_email(cls, email):
+    #     if not re.findall('[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}', email):
+    #         raise ValidationError('message': 'Email must by like exmple@example.com')
+    #     return email
 
 
 class UserResponse(BaseModel):
+    id: UUID
     first_name: str
     last_name: str
     email: str
-    name: str
-    zip_code: str
-    building_number: Optional[int] = 0
-    street_name: Optional[str] = None
+    created_at: datetime = None
+    updated_at: datetime = None
+    address: dict = {}
 
     class Config:
         orm_mode = True
+
+
+class Login(BaseModel):
+    email: str
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
