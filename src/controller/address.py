@@ -54,7 +54,7 @@ async def add_new_address(add: Address,
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='Address Not Created')
-    return JSONResponse(status_code=status.HTTP_200_OK,
+    return JSONResponse(status_code=status.HTTP_201_CREATED,
                         content=jsonable_encoder(
                             AddressRespons(**dict(result))))
 

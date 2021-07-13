@@ -11,6 +11,7 @@ from src.hashpass import Hash
 from src.model import User, UserResponse
 from src.oauth2 import get_current_user
 
+
 router = APIRouter(prefix='/users', tags=['Users'])
 
 
@@ -96,7 +97,7 @@ async def add_new_users(user: User) -> JSONResponse:
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='No User Addedd')
-    return JSONResponse(status_code=status.HTTP_200_OK,
+    return JSONResponse(status_code=status.HTTP_201_CREATED,
                         content=jsonable_encoder(UserResponse(**dict(result))))
 
 
