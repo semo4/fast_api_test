@@ -32,9 +32,7 @@ async def get_addresses(current_user: User = Depends(
 
 
 @router.get('/{address_id}', response_model=AddressRespons)
-async def get_address_by_id(
-    address_id: UUID, current_user: User = Depends(get_current_user)
-) -> JSONResponse:
+async def get_address_by_id(address_id: UUID, current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address.select().where(
         address.c.id == address_id).execute().first()
     if not result:
