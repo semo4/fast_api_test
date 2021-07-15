@@ -116,7 +116,7 @@ async def delete_user_by_id(user_id: UUID,
                                 detail='User Dose not deleted')
         return JSONResponse(status_code=status.HTTP_204_NO_CONTENT,
                             content=jsonable_encoder(
-                                [UserResponse(**dict(result))]))
+                                UserResponse(**dict(result))))
 
 
 @router.put('/{user_id}', response_model=UserResponse)

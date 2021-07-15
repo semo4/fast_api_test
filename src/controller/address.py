@@ -23,6 +23,7 @@ def address_by_id(address_id: UUID):
 async def get_addresses(current_user: User = Depends(
                         get_current_user)) -> JSONResponse:
     result = address.select().execute().fetchall()
+    # print('>>>>>>>>>>>>>>.', result)
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='No Addresses Found')
@@ -32,7 +33,9 @@ async def get_addresses(current_user: User = Depends(
 
 
 @router.get('/{address_id}', response_model=AddressRespons)
-async def get_address_by_id(address_id: UUID, current_user: User = Depends(get_current_user)) -> JSONResponse:
+async def get_address_by_id(
+    address_id: UUID, current_user: User = Depends(get_current_user)
+) -> JSONResponse:
     result = address.select().where(
         address.c.id == address_id).execute().first()
     if not result:
@@ -45,8 +48,9 @@ async def get_address_by_id(address_id: UUID, current_user: User = Depends(get_c
 
 
 @router.post('/', response_model=AddressRespons)
-async def add_new_address(add: Address,
-                          current_user: User = Depends(get_current_user)) -> JSONResponse:
+async def add_new_address(
+    add: Address,
+    current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address.insert().values(dict(add)).returning(
         literal_column('*')).execute().first()
     if not result:
@@ -78,8 +82,10 @@ async def delete(
 
 
 @router.put('/{address_id}', response_model=AddressRespons)
-async def update(address_id: UUID, add: Address,
-                 current_user: User = Depends(get_current_user)) -> JSONResponse:
+async def update(
+    address_id: UUID,
+    add: Address,
+    current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address_by_id(address_id)
     if not result:
         raise HTTPException(
@@ -97,8 +103,10 @@ async def update(address_id: UUID, add: Address,
 
 
 @router.patch('/{address_id}', response_model=AddressRespons)
-async def update_single_value(address_id: UUID, add: Address,
-                              current_user: User = Depends(get_current_user)) -> JSONResponse:
+async def update_single_value(
+    address_id: UUID,
+    add: Address,
+    current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address_by_id(address_id)
     if not result:
         raise HTTPException(
