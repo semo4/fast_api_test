@@ -4,7 +4,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from fastapi.middleware.cors import CORSMiddleware
-from src.controller import address, authantication, users
+from src.controllers import address_controllers, authantication, users_controllers
 
 
 # from starlette.types import ASGIApp, Scope, Receive, Send
@@ -23,8 +23,8 @@ from src.controller import address, authantication, users
 app = FastAPI(title='User Address API', version="1.0", description='User Address Api')
 
 app.include_router(authantication.router)
-app.include_router(users.router)
-app.include_router(address.router)
+app.include_router(users_controllers.router)
+app.include_router(address_controllers.router)
 
 origins = [
     "http://localhost.tiangolo.com",
@@ -69,5 +69,3 @@ async def integrity_exception_handler(request, exc):
             'message':
             'violates constraint', 'error': str(exc)
         }))
-
-

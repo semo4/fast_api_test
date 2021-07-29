@@ -7,23 +7,17 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.sql.elements import literal_column
 
 from src.database import address
-from src.model import Address, AddressRespons, User
+from src.model import Address, AddressRespons
 from src.oauth2 import get_current_user
 
-router = APIRouter(prefix='/address', tags=['Address'])
-
-
-def address_by_id(address_id: UUID):
-    result = address.select().where(
-        address.c.id == address_id).execute().first()
-    return result
+router = APIRouter(prefix='/address',
+                   tags=['Address'],
+                   dependencies=[Depends(get_current_user)])
 
 
 @router.get('/', response_model=AddressRespons)
-async def get_addresses(current_user: User = Depends(
-                        get_current_user)) -> JSONResponse:
+async def get_addresses() -> JSONResponse:
     result = address.select().execute().fetchall()
-    # print('>>>>>>>>>>>>>>.', result)
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='No Addresses Found')
@@ -33,9 +27,7 @@ async def get_addresses(current_user: User = Depends(
 
 
 @router.get('/{address_id}', response_model=AddressRespons)
-async def get_address_by_id(
-    address_id: UUID, current_user: User = Depends(get_current_user)
-) -> JSONResponse:
+async def get_address_by_id(address_id: UUID) -> JSONResponse:
     result = address.select().where(
         address.c.id == address_id).execute().first()
     if not result:
@@ -48,9 +40,7 @@ async def get_address_by_id(
 
 
 @router.post('/', response_model=AddressRespons)
-async def add_new_address(
-    add: Address,
-    current_user: User = Depends(get_current_user)) -> JSONResponse:
+async def add_new_address(add: Address) -> JSONResponse:
     result = address.insert().values(dict(add)).returning(
         literal_column('*')).execute().first()
     if not result:
@@ -62,10 +52,9 @@ async def add_new_address(
 
 
 @router.delete('/{address_id}', response_model=AddressRespons)
-async def delete(
-    address_id: UUID, current_user: User = Depends(get_current_user)
-) -> JSONResponse:
-    result = address_by_id(address_id)
+async def delete(address_id: UUID) -> JSONResponse:
+    result = address.select().where(
+        address.c.id == address_id).execute().first()
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -82,11 +71,9 @@ async def delete(
 
 
 @router.put('/{address_id}', response_model=AddressRespons)
-async def update(
-    address_id: UUID,
-    add: Address,
-    current_user: User = Depends(get_current_user)) -> JSONResponse:
-    result = address_by_id(address_id)
+async def update(address_id: UUID, add: Address) -> JSONResponse:
+    result = address.select().where(
+        address.c.id == address_id).execute().first()
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -103,11 +90,9 @@ async def update(
 
 
 @router.patch('/{address_id}', response_model=AddressRespons)
-async def update_single_value(
-    address_id: UUID,
-    add: Address,
-    current_user: User = Depends(get_current_user)) -> JSONResponse:
-    result = address_by_id(address_id)
+async def update_single_value(address_id: UUID, add: Address) -> JSONResponse:
+    result = address.select().where(
+        address.c.id == address_id).execute().first()
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

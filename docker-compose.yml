@@ -1,0 +1,39 @@
+version: "2.4"
+services:
+  user-api-base: 
+    image: user-api
+    container_name: user-api
+    build:
+      context: .
+    volumes:
+        - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_PASSWORD=yousef123
+      - POSTGRES_USER=osama
+      - POSTGRES_DB=user_address
+    env_file:
+      - .env
+
+  user-api-app:
+    extends: user-api-base
+    depends_on:
+      - user-db
+    command: ["uvicorn", "app:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+
+  user-api-test:
+    extends: user-api-base
+    depends_on:
+      - user-db
+    command: ["pytest", "-vv", "-s"]
+
+  user-db:
+    image: postgres:12.7
+    container_name: user-db
+    ports:
+        - "54321:5432"
+    environment:
+        - POSTGRES_PASSWORD=yousef123
+        - POSTGRES_USER=osama
+        - POSTGRES_DB=user_address

@@ -4,7 +4,6 @@ import os
 import sys
 sys.path.append(os.getcwd())
 from app import app
-from database import address
 
 headers_ = {
     'Authorization':

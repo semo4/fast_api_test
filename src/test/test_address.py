@@ -2,23 +2,40 @@ from pytest_mock import MockFixture
 
 headers_ = {
     'Authorization':
-    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJvc0Bob3RtYWlsLmNvbSIsImV4cCI6MTYyNjM2MzQ3Mn0.rwbX1NXzqz5vNYS6EE7HU4CXkvyhUv7jRfNTjGt02so'
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJvc0Bob3RtYWlsLmNvbSIsImV4cCI6MTYyNzU0Nzg0OH0.USBN7YFOapTDucQKNAk4guS3IXnYiCapmhi_Jyyn5U0'
 }
 
 
 def test_get_addresses(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.select.return_value.execute.return_value.fetchall.return_value.called = {
-        'name': 'Amman'
-    }
-    mock_address.called == True
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.execute.return_value.fetchall.return_value = []
+
     response = client.get('/address/', headers=headers_)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    else:
-        assert response.status_code == 200
-        assert response.json()[0]['name'] == result['name']
+    assert response.status_code == 404
+
+
+def test_get_addresses_not_found(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.execute.return_value.first.return_value = [{
+        "id":
+        "29309b48-fff3-4b77-b07b-c4006e899fc1",
+        "name":
+        "Amman",
+        "zip_code":
+        "11111",
+        "building_number":
+        5,
+        "street_name":
+        "mainstretamman",
+        "created_at":
+        "2021-07-21T18:35:57.928243",
+        "updated_at":
+        "2021-07-21T18:35:57.928250"
+    }]
+    response = client.get('/address/', headers=headers_)
+    assert response.status_code == 200
 
 
 def test_unauthorized(client):
@@ -28,312 +45,417 @@ def test_unauthorized(client):
 
 
 def test_get_address_by_id(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.select.return_value.execute.return_value.first.return_value = {
-        "id": "a3d1918d-9420-451f-9d25-1f9313d7891c",
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {
+        "id": "29309b48-fff3-4b77-b07b-c4006e899fc1",
         "name": "Amman",
-        "zip_code": "77777",
-        "building_number": 41,
-        "street_name": "fbwtbwrtbgfgbtrbA",
-        "created_at": "2021-07-12T07:11:57.908966",
-        "updated_at": "2021-07-12T07:11:57.908974"
+        "zip_code": "11111",
+        "building_number": 5,
+        "street_name": "mainstretamman",
+        "created_at": "2021-07-21T18:35:57.928243",
+        "updated_at": "2021-07-21T18:35:57.928250"
     }
-    mock_address.called == True
-    response = client.get('/address/' + result['id'], headers=headers_)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    else:
-        assert response.status_code == 200
-        assert response.json()['name'] == result['name']
+
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899fc1',
+                          headers=headers_)
+    assert response.status_code == 200
 
 
-def test_single_address_with_wrong_id(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.select.return_value.execute.return_value.fetchone.return_value = {
-        "id": "a3d1918d-9420-451f-9d25-1f9313d789"
-    }
-    mock_address.called == True
-    response = client.get('/address/' + result['id'], headers=headers_)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    else:
-        assert response.status_code == 422
-        assert response.json() == {
-            'detail': [{
-                'loc': ['path', 'address_id'],
-                'msg': 'value is not a valid uuid',
-                'type': 'type_error.uuid'
-            }]
-        }
+def test_get_empty_address_by_id(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {}
 
-
-def test_not_found_address(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.select.return_value.execute.return_value.first.return_value = {
-        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        "name": "LosAnglos",
-        "zip_code": "74521",
-        "building_number": 20,
-        "street_name": "Backlongroad",
-    }
-    mock_address.called == True
-    response = client.get('/address/' + result['id'], headers=headers_)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    else:
-        assert response.status_code == 404
-        assert response.json() == {'message': 'Not Exist'}
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899f55',
+                          headers=headers_)
+    assert response.status_code == 404
 
 
 def test_post(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.insert.return_value.values.return_value.execute.return_value.first.return_value = {
-        "name": "Aqaba",
-        "zip_code": "45696",
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.insert')
+    mock_address.return_value.values.return_value.returning.return_value.\
+        execute.return_value.first.return_value = {
+            "id": "5796d483-8a28-48b0-b288-fda6454041b5",
+            "name": "Irbid",
+            "zip_code": "25252",
+            "building_number": 7,
+            "street_name": "mainstreet",
+            "created_at": "2021-07-25T07:43:03.015999",
+            "updated_at": "2021-07-25T07:43:03.016005"
+        }
+    result = {
+        "name": "Irbid",
+        "zip_code": "25252",
         "building_number": 7,
         "street_name": "mainstreet",
     }
-    mock_address.called == True
     response = client.post('/address/', headers=headers_, json=result)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    elif response.status_code == 400:
-        assert response.status_code == 400
-        assert response.json()['message'] == 'violates constraint'
-    else:
-        assert response.status_code == 201
-        assert response.json()['name'] == result['name']
+    assert response.status_code == 201
 
 
 def test_post_missing_value_address(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.insert.return_value.values.return_value.execute.return_value.first.return_value = {
-        "zip_code": "74852",
-        "building_number": "71",
-        "street_name": "armystreet"
-    }
-    mock_address.called == True
-    response = client.post('/address/', headers=headers_, json=result)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    else:
-        assert response.status_code == 422
-        assert response.json() == {
-            'detail': [{
-                'loc': ['body', 'name'],
-                'msg': 'field required',
-                'type': 'value_error.missing'
-            }]
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.insert')
+    mock_address.return_value.values.return_value.returning.return_value.\
+        execute.return_value.first.return_value = {
+            "zip_code": "25252",
+            "building_number": 7,
+            "street_name": "mainstreet"
         }
-
-
-def test_post_violate_data(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.insert.return_value.values.return_value.execute.return_value.first.return_value = {
-        "name": "Zarqa",
-        "zip_code": "5",
-        "building_number": "71",
-        "street_name": "armystreet"
-    }
-    mock_address.called == True
+    result = {"name": "Irbid", "zip_code": "25252", "building_number": 7}
     response = client.post('/address/', headers=headers_, json=result)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    else:
-        assert response.status_code == 422
-        assert response.json() == {
-            'detail': [{
-                'ctx': {
-                    'pattern': '[0-9]{5}'
-                },
-                'loc': ['body', 'zip_code'],
-                'msg': 'string does not match regex "[0-9]{5}"',
-                'type': 'value_error.str.regex'
-            }]
-        }
+    assert response.status_code == 400
 
 
-def test_delete_foreign_key(client, mocker: MockFixture):
+def test_post_empty_return(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.insert')
+    mock_address.return_value.values.return_value.returning.return_value.\
+        execute.return_value.first.return_value = {}
+    result = {
+        "name": "Irbid",
+        "zip_code": "25252",
+        "building_number": 7,
+        "street_name": "mainstreet",
+    }
+    response = client.post('/address/', headers=headers_, json=result)
+    assert response.status_code == 404
 
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.select.return_value.values.return_value.execute.return_value.first.return_value = {
-        "id": "a3d1918d-9420-451f-9d25-1f9313d7891c",
+
+def test_delete(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {
+        "id": "29309b48-fff3-4b77-b07b-c4006e899fc1",
         "name": "Amman",
-        "zip_code": "77777",
-        "building_number": 41,
-        "street_name": "fbwtbwrtbgfgbtrbA",
+        "zip_code": "11111",
+        "building_number": 5,
+        "street_name": "mainstretamman",
+        "created_at": "2021-07-21T18:35:57.928243",
+        "updated_at": "2021-07-21T18:35:57.928250"
     }
-    mock_address.called == True
 
-    response = client.delete('/address/' + result['id'], headers=headers_)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    else:
-        assert response.status_code == 400
-        assert response.json()['message'] == 'violates constraint'
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899fc1',
+                          headers=headers_)
+    if response.status_code == 200:
+        mock_address = mocker.patch(
+            'controllers.address_controllers.address.delete')
+        mock_address.return_value.where.return_value.returning.return_value.\
+            execute.return_value.first.return_value = {
+                "id": "29309b48-fff3-4b77-b07b-c4006e899fc1",
+                "name": "Amman",
+                "zip_code": "11111",
+                "building_number": 5,
+                "street_name": "mainstretamman",
+                "created_at": "2021-07-21T18:35:57.928243",
+                "updated_at": "2021-07-21T18:35:57.928250"
+            }
+        response = client.delete(
+            '/address/29309b48-fff3-4b77-b07b-c4006e899fc1', headers=headers_)
+        assert response.status_code == 204
 
 
 def test_delete_address_wrong_id(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.select.return_value.values.return_value.execute.return_value.first.return_value = {
-        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        "name": "string",
-        "zip_code": "string",
-        "building_number": 0,
-        "street_name": "string",
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {
+        "id": "29309b48-fff3-4b77-b07b-c4006e899fc1",
+        "name": "Amman",
+        "zip_code": "11111",
+        "building_number": 5,
+        "street_name": "mainstretamman",
+        "created_at": "2021-07-21T18:35:57.928243",
+        "updated_at": "2021-07-21T18:35:57.928250"
     }
-    mock_address.called == True
-    response = client.delete('/address/' + result['id'], headers=headers_)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    else:
+
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899f45',
+                          headers=headers_)
+    if response.status_code == 404:
+        mock_address = mocker.patch(
+            'controllers.address_controllers.address.delete')
+        mock_address.return_value.where.return_value.returning.return_value.\
+            execute.return_value.first.return_value = {
+                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "name": "string",
+                "zip_code": "string",
+                "building_number": 0,
+                "street_name": "string",
+            }
+        response = client.delete(
+            '/address/3fa85f64-5717-4562-b3fc-2c963f66af45', headers=headers_)
         assert response.status_code == 404
-        assert response.json() == {'message': 'Not Exist'}
 
 
-def test_delete_exist(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.select.return_value.values.return_value.execute.return_value.first.return_value = {
-        "id": "cc8a3095-30b4-49ce-a738-e3bb3aacf902",
-        "name": "Aqaba",
-        "zip_code": "45696",
-        "building_number": 7,
-        "street_name": "mainstreet",
-        "created_at": "2021-07-14T10:00:17.287564",
-        "updated_at": "2021-07-14T10:00:17.287569"
-    }
-    mock_address.called == True
-    response = client.delete('/address/' + result['id'], headers=headers_)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    elif response.status_code == 400:
-        assert response.status_code == 400
-        assert response.json()['message'] == 'violates constraint'
-    elif response.status_code == 404:
+def test_delete_error(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {}
+
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899f45',
+                          headers=headers_)
+    if response.status_code == 404:
+        mock_address = mocker.patch(
+            'controllers.address_controllers.address.delete')
+        mock_address.return_value.where.return_value.returning.return_value.\
+            execute.return_value.first.return_value = {}
+        response = client.delete(
+            '/address/5796d483-8a28-48b0-b288-fda6454041b5', headers=headers_)
         assert response.status_code == 404
-        assert response.json() == {'message': 'Not Exist'}
-    else:
-        assert response.status_code == 204
-        assert response.json()['name'] == result['name']
 
 
 def test_put(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.update.return_value.values.return_value.execute.return_value.first.return_value = {
-        "id": "a2223ef3-bb3f-4bc3-afb7-9512b9766840",
-        "name": "Petra",
-        "zip_code": "25896",
-        "building_number": 8,
-        "street_name": "ghrfgvddvskhytgggg",
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {
+        "id": "29309b48-fff3-4b77-b07b-c4006e899fc1",
+        "name": "Amman",
+        "zip_code": "11111",
+        "building_number": 5,
+        "street_name": "mainstretamman",
+        "created_at": "2021-07-21T18:35:57.928243",
+        "updated_at": "2021-07-21T18:35:57.928250"
     }
-    mock_address.called == True
-    response = client.put('/address/' + result['id'],
-                          headers=headers_,
-                          json=result)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    elif response.status_code == 400:
-        assert response.status_code == 400
-        assert response.json()['message'] == 'violates constraint'
-    elif response.status_code == 404:
-        assert response.status_code == 404
-        assert response.json() == {'message': 'Not Exist'}
-    else:
+
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899fc1',
+                          headers=headers_)
+    if response.status_code == 200:
+        mock_address = mocker.patch(
+            'controllers.address_controllers.address.update')
+        mock_address.return_value.where.return_value.values.return_value.returning.return_value.\
+            execute.return_value.first.return_value = {
+                "id": "5796d483-8a28-48b0-b288-fda6454041b5",
+                "name": "Petra",
+                "zip_code": "25252",
+                "building_number": 7,
+                "street_name": "mainstreet",
+                "created_at": "2021-07-25T07:43:03.015999",
+                "updated_at": "2021-07-25T07:43:03.016005"
+            }
+        result = {
+            "name": "Petra",
+            "zip_code": "25252",
+            "building_number": 7,
+            "street_name": "mainstreet",
+        }
+        response = client.put('/address/5796d483-8a28-48b0-b288-fda6454041b5',
+                              headers=headers_,
+                              json=result)
         assert response.status_code == 201
-        assert response.json()['name'] == result['name']
 
 
 def test_put_not_exist(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.update.return_value.values.return_value.execute.return_value.first.return_value = {
-        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        "name": "teststring",
-        "zip_code": "12563",
-        "building_number": 0,
-        "street_name": "teststring",
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {
+        "id": "29309b48-fff3-4b77-b07b-c4006e899fc1",
+        "name": "Amman",
+        "zip_code": "11111",
+        "building_number": 5,
+        "street_name": "mainstretamman",
+        "created_at": "2021-07-21T18:35:57.928243",
+        "updated_at": "2021-07-21T18:35:57.928250"
     }
-    mock_address.called == True
-    response = client.put('/address/' + result['id'],
-                          headers=headers_,
-                          json=result)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    elif response.status_code == 400:
-        assert response.status_code == 400
-        assert response.json()['message'] == 'violates constraint'
-    else:
+
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899f45',
+                          headers=headers_)
+    if response.status_code == 404:
+        mock_address = mocker.patch(
+            'controllers.address_controllers.address.update')
+        mock_address.return_value.where.return_value.values.return_value.returning.return_value.\
+            execute.return_value.first.return_value = {
+                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "name": "teststring",
+                "zip_code": "12563",
+                "building_number": 0,
+                "street_name": "teststring",
+            }
+        result = {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "name": "teststring",
+            "zip_code": "12563",
+            "building_number": 0,
+            "street_name": "teststring",
+        }
+        response = client.put('/address/3fa85f64-5717-4562-b3fc-2c963f66afa6',
+                              headers=headers_,
+                              json=result)
         assert response.status_code == 404
-        assert response.json() == {'message': 'Not Exist'}
 
 
-def test_put_missing_value(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.update.return_value.values.return_value.execute.return_value.first.return_value = {
-        "id": "a2223ef3-bb3f-4bc3-afb7-9512b9766840",
-        "zip_code": "25896",
-        "building_number": 8,
-        "street_name": "ghrfgvddvskhytgggg",
+def test_violate_put(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.update')
+    mock_address.return_value.where.return_value.values.return_value.returning.return_value.\
+        execute.return_value.first.return_value = {
+            "id": "5796d483-8a28-48b0-b288-fda6454041b5",
+            "name": "Petra",
+            "zip_code": "25252",
+            "building_number": 7,
+            "street_name": "mainstreet",
+            "created_at": "2021-07-25T07:43:03.015999",
+            "updated_at": "2021-07-25T07:43:03.016005"
+        }
+    result = {
+        "name": "Petra",
+        "zip_code": "25",
+        "building_number": 7,
+        "street_name": "mainstreet",
     }
-    mock_address.called == True
-    response = client.put('/address/' + result['id'],
+    response = client.put('/address/5796d483-8a28-48b0-b288-fda6454041b5',
                           headers=headers_,
                           json=result)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    elif response.status_code == 400:
-        assert response.status_code == 400
-        assert response.json()['message'] == 'violates constraint'
-    else:
-        assert response.status_code == 422
-        assert response.json() == {
-            'detail': [{
-                'loc': ['body', 'name'],
-                'msg': 'field required',
-                'type': 'value_error.missing'
-            }]
+    assert response.status_code == 422
+
+
+def test_put_404(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {}
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899f45',
+                          headers=headers_)
+    if response.status_code == 404:
+        mock_address = mocker.patch(
+            'controllers.address_controllers.address.update')
+        mock_address.return_value.where.return_value.values.return_value.returning.return_value.\
+            execute.return_value.first.return_value = {}
+        result = {
+            "name": "Petra",
+            "zip_code": "25548",
+            "building_number": 7,
+            "street_name": "mainstreet",
         }
+        response = client.put('/address/5796d483-8a28-48b0-b288-fda6454041b5',
+                              headers=headers_,
+                              json=result)
+        assert response.status_code == 404
 
 
-def test_put_violate(client, mocker: MockFixture):
-    mock_address = mocker.patch('controller.address.address')
-    result = mock_address.return_value.update.return_value.values.return_value.execute.return_value.first.return_value = {
-        "id": "a2223ef3-bb3f-4bc3-afb7-9512b9766840",
-        "name": "kj",
-        "zip_code": "25894",
-        "building_number": 8,
-        "street_name": "ghrfgvddvskhytgggg",
+def test_patch(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {
+        "id": "29309b48-fff3-4b77-b07b-c4006e899fc1",
+        "name": "Amman",
+        "zip_code": "11111",
+        "building_number": 5,
+        "street_name": "mainstretamman",
+        "created_at": "2021-07-21T18:35:57.928243",
+        "updated_at": "2021-07-21T18:35:57.928250"
     }
-    mock_address.called == True
-    response = client.put('/address/' + result['id'],
-                          headers=headers_,
-                          json=result)
-    if response.status_code == 401:
-        assert response.status_code == 401
-        assert response.json() == {'message': 'Not UNAUTHORIZED'}
-    elif response.status_code == 400:
-        assert response.status_code == 400
-        assert response.json()['message'] == 'violates constraint'
-    else:
-        assert response.status_code == 422
-        assert response.json() == {
-            'detail': [{
-                'ctx': {
-                    'pattern': '[A-Za-z]{5,50}'
-                },
-                'loc': ['body', 'name'],
-                'msg': 'string does not match regex "[A-Za-z]{5,50}"',
-                'type': 'value_error.str.regex'
-            }]
+
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899fc1',
+                          headers=headers_)
+    if response.status_code == 200:
+        mock_address = mocker.patch(
+            'controllers.address_controllers.address.update')
+        mock_address.return_value.where.return_value.values.return_value.returning.return_value.\
+            execute.return_value.first.return_value = {
+                "id": "5796d483-8a28-48b0-b288-fda6454041b5",
+                "name": "Petra",
+                "zip_code": "25252",
+                "building_number": 7,
+                "street_name": "mainstreet",
+                "created_at": "2021-07-25T07:43:03.015999",
+                "updated_at": "2021-07-25T07:43:03.016005"
+            }
+        result = {
+            "name": "Petra",
+            "zip_code": "25252",
+            "building_number": 7,
+            "street_name": "mainstreet",
         }
+        response = client.patch(
+            '/address/5796d483-8a28-48b0-b288-fda6454041b5',
+            headers=headers_,
+            json=result)
+        assert response.status_code == 201
+
+
+def test_patch_not_exist(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {
+        "id": "29309b48-fff3-4b77-b07b-c4006e899fc1",
+        "name": "Amman",
+        "zip_code": "11111",
+        "building_number": 5,
+        "street_name": "mainstretamman",
+        "created_at": "2021-07-21T18:35:57.928243",
+        "updated_at": "2021-07-21T18:35:57.928250"
+    }
+
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899f45',
+                          headers=headers_)
+    if response.status_code == 404:
+        mock_address = mocker.patch(
+            'controllers.address_controllers.address.update')
+        mock_address.return_value.where.return_value.values.return_value.returning.return_value.\
+            execute.return_value.first.return_value = {
+                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "name": "teststring",
+                "zip_code": "12563",
+                "building_number": 0,
+                "street_name": "teststring",
+            }
+        result = {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "name": "teststring",
+            "zip_code": "12563",
+            "building_number": 0,
+            "street_name": "teststring",
+        }
+        response = client.patch('/address/3fa85f64-5717-4562-b3fc-2c963f66afa6',
+                                headers=headers_,
+                                json=result)
+        assert response.status_code == 404
+
+
+def test_violate_patch(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.update')
+    mock_address.return_value.where.return_value.values.return_value.returning.return_value.\
+        execute.return_value.first.return_value = {
+
+            "id": "5796d483-8a28-48b0-b288-fda6454041b5",
+            "name": "Petra",
+            "zip_code": "25252",
+            "building_number": 7,
+            "street_name": "mainstreet",
+            "created_at": "2021-07-25T07:43:03.015999",
+            "updated_at": "2021-07-25T07:43:03.016005"
+        }
+    result = {
+        "name": "Petra",
+        "zip_code": "25",
+        "building_number": 7,
+        "street_name": "mainstreet",
+    }
+    response = client.patch('/address/5796d483-8a28-48b0-b288-fda6454041b5',
+                            headers=headers_,
+                            json=result)
+    assert response.status_code == 422
+
+
+def test_patch_404(client, mocker: MockFixture):
+    mock_address = mocker.patch(
+        'controllers.address_controllers.address.select')
+    mock_address.return_value.where.return_value.execute.return_value.first.return_value = {}
+    response = client.get('/address/29309b48-fff3-4b77-b07b-c4006e899f45',
+                          headers=headers_)
+    if response.status_code == 404:
+        mock_address = mocker.patch(
+            'controllers.address_controllers.address.update')
+        mock_address.return_value.where.return_value.values.return_value.returning.return_value.\
+            execute.return_value.first.return_value = {}
+        result = {
+            "name": "Petra",
+            "zip_code": "25458",
+            "building_number": 7,
+            "street_name": "mainstreet",
+        }
+        response = client.patch('/address/5796d483-8a28-48b0-b288-fda6454041b5',
+                                headers=headers_,
+                                json=result)
+        assert response.status_code == 404
