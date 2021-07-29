@@ -6,6 +6,7 @@ from sqlalchemy import (
     func, text
 )
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql.elements import literal_column
 
 DB_URL = config('DB_URL')
 
@@ -16,6 +17,8 @@ new_uuid = text('uuid_generate_v4()')
 now = datetime.utcnow
 
 default_now = dict(default=now, server_default=func.now())
+
+ALL_COLUMNS = literal_column('*')
 
 users = Table(
     'users', metadata,

@@ -1,6 +1,7 @@
-from pytest_mock import MockFixture
 import datetime
 from uuid import UUID
+
+from pytest_mock import MockFixture
 
 headers_ = {
     'Authorization':

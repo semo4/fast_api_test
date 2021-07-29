@@ -42,11 +42,6 @@ class User(BaseModel):
         description='the password should contain Letters(Lower and Upper),'
         + 'special characters and numbers at least with length 8'
     )
-    # @validate_email('email')
-    # def check_email(cls, email):
-    #     if not re.findall('[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}', email):
-    #         raise ValidationError('message': 'Email must by like exmple@example.com')
-    #     return email
 
 
 class UserResponse(BaseModel):
@@ -56,7 +51,7 @@ class UserResponse(BaseModel):
     email: str
     created_at: datetime = None
     updated_at: datetime = None
-    address: dict = {}
+    address: AddressRespons
 
     class Config:
         orm_mode = True
