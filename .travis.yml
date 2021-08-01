@@ -1,22 +1,3 @@
-# language: python
-
-# python: 
-#   - "3.8"
-
-# services:
-#   - docker
-
-# before_script: 
-#   - pip install docker
-#   - pip install docker-compose
-
-# script: 
-#   - pytest -vv -s
-  # - docker-compose build user-api-app
-  # - docker exec -it user-api bash
-  # - alembic upgrade head
-  # - docker-compose run --rm user-api-test
-
 language: python
 python:
   - "3.8"
