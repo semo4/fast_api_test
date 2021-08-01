@@ -6,12 +6,11 @@ from fastapi.param_functions import Depends
 from fastapi.responses import JSONResponse
 
 from src.database import ALL_COLUMNS, address
-from src.model import Address, AddressRespons
+from src.model import Address, AddressRespons, User
 from src.oauth2 import get_current_user
 
 router = APIRouter(prefix='/address',
-                   tags=['Address'],
-                   dependencies=[Depends(get_current_user)])
+                   tags=['Address'])
 
 
 @router.get('/', response_model=AddressRespons)
@@ -19,7 +18,7 @@ async def get_addresses() -> JSONResponse:
     result = address.select().execute()
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='No Addresses Found')
+                            detail='There is No Addresses Found')
 
     return JSONResponse(status_code=status.HTTP_200_OK,
                         content=jsonable_encoder(
@@ -30,6 +29,7 @@ async def get_addresses() -> JSONResponse:
 async def get_address_by_id(address_id: UUID) -> JSONResponse:
     result = address.select().where(
         address.c.id == address_id).execute().first()
+
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -50,10 +50,12 @@ async def add_new_address(address_: Address) -> JSONResponse:
 
 
 @router.delete('/{address_id}', response_model=AddressRespons)
-async def delete(address_id: UUID) -> JSONResponse:
+async def delete(
+        address_id: UUID) -> JSONResponse:
 
     result = address.select().where(
         address.c.id == address_id).execute().first()
+
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -78,7 +80,6 @@ async def update(address_id: UUID, address_: Address) -> JSONResponse:
     else:
         result = address.delete().where(address.c.id == address_id).returning(
             ALL_COLUMNS).execute().first()
-
         result = address.insert().values(
             dict(address_)).returning(ALL_COLUMNS).execute().first()
 
@@ -88,7 +89,8 @@ async def update(address_id: UUID, address_: Address) -> JSONResponse:
 
 
 @router.patch('/{address_id}', response_model=AddressRespons)
-async def update_single_value(address_id: UUID, add: Address) -> JSONResponse:
+async def update_single_value(
+        address_id: UUID, add: Address) -> JSONResponse:
     result = address.select().where(
         address.c.id == address_id).execute().first()
     if not result:

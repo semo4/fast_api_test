@@ -51,7 +51,7 @@ class UserResponse(BaseModel):
     email: str
     created_at: datetime = None
     updated_at: datetime = None
-    address: AddressRespons
+    address: AddressRespons = {}
 
     class Config:
         orm_mode = True
