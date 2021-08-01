@@ -14,7 +14,7 @@ router = APIRouter(prefix='/address',
 
 
 @router.get('/', response_model=AddressRespons)
-async def get_addresses() -> JSONResponse:
+async def get_addresses(current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address.select().execute()
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -26,7 +26,8 @@ async def get_addresses() -> JSONResponse:
 
 
 @router.get('/{address_id}', response_model=AddressRespons)
-async def get_address_by_id(address_id: UUID) -> JSONResponse:
+async def get_address_by_id(address_id: UUID,
+                            current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address.select().where(
         address.c.id == address_id).execute().first()
 
@@ -51,7 +52,7 @@ async def add_new_address(address_: Address) -> JSONResponse:
 
 @router.delete('/{address_id}', response_model=AddressRespons)
 async def delete(
-        address_id: UUID) -> JSONResponse:
+        address_id: UUID, current_user: User = Depends(get_current_user)) -> JSONResponse:
 
     result = address.select().where(
         address.c.id == address_id).execute().first()
@@ -70,7 +71,8 @@ async def delete(
 
 
 @router.put('/{address_id}', response_model=AddressRespons)
-async def update(address_id: UUID, address_: Address) -> JSONResponse:
+async def update(address_id: UUID, address_: Address,
+                 current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address.select().where(
         address.c.id == address_id).execute().first()
     if not result:
@@ -90,7 +92,8 @@ async def update(address_id: UUID, address_: Address) -> JSONResponse:
 
 @router.patch('/{address_id}', response_model=AddressRespons)
 async def update_single_value(
-        address_id: UUID, add: Address) -> JSONResponse:
+        address_id: UUID, add: Address,
+        current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = address.select().where(
         address.c.id == address_id).execute().first()
     if not result:

@@ -11,11 +11,10 @@ from src.model import User, UserResponse
 from src.oauth2 import get_current_user
 
 router = APIRouter(prefix='/users', tags=['Users'])
-# current_user: User = Depends(get_current_user)
 
 
 @router.get('/', response_model=UserResponse)
-async def get_users() -> JSONResponse:
+async def get_users(current_user: User = Depends(get_current_user)) -> JSONResponse:
     stmt = select([users, address]).select_from(
         users.join(address, users.c.address_id == address.c.id)).where(
             users.c.address_id == address.c.id)
@@ -49,7 +48,8 @@ async def get_users() -> JSONResponse:
 
 
 @router.get('/{user_id}', response_model=UserResponse)
-async def get_user_by_id(user_id: UUID) -> JSONResponse:
+async def get_user_by_id(user_id: UUID,
+                         current_user: User = Depends(get_current_user)) -> JSONResponse:
     stmt = select(users, address).select_from(
         users.join(
             address,
@@ -91,8 +91,8 @@ async def add_new_users(user: User) -> JSONResponse:
 
 
 @router.delete('/{user_id}', response_model=UserResponse)
-async def delete_user_by_id(user_id: UUID
-                            ) -> JSONResponse:
+async def delete_user_by_id(user_id: UUID,
+                            current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = users.select().where(users.c.id == user_id).execute().first()
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -106,8 +106,8 @@ async def delete_user_by_id(user_id: UUID
 
 
 @router.put('/{user_id}', response_model=UserResponse)
-async def update_single_user(user_id: UUID, user: User
-                             ) -> JSONResponse:
+async def update_single_user(user_id: UUID, user: User,
+                             current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = users.select().where(users.c.id == user_id).execute().first()
     if not result:
         raise HTTPException(
@@ -127,8 +127,8 @@ async def update_single_user(user_id: UUID, user: User
 
 
 @router.patch('/{user_id}', response_model=UserResponse)
-async def update_single_value_user(user_id: UUID, user: User
-                                   ) -> JSONResponse:
+async def update_single_value_user(user_id: UUID, user: User,
+                                   current_user: User = Depends(get_current_user)) -> JSONResponse:
     result = users.select().where(users.c.id == user_id).execute().first()
     if not result:
         raise HTTPException(
