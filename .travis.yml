@@ -6,7 +6,9 @@ python:
 services:
   - docker
 
-before_script: pip install docker-compose
+before_script: 
+  - pip install docker
+  - pip install docker-compose
 
 script: 
   - docker-compose build user-api-app
